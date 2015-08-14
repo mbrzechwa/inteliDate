@@ -1,68 +1,87 @@
 <!DOCTYPE html>
 <html>
 
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="InteliDate : Inteligently interpret user date input in a single field">
+<head>
+	<meta charset='utf-8'>
+	<meta http-equiv="X-UA-Compatible" content="chrome=1">
+	<meta name="description" content="InteliDate : Inteligently interpret user date input in a single field">
+	<script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+	<script src="intelidate.js"></script>
+	<script>
+	
+		$(function() {
+			
+			$('input[type=date]').intelidate({
+				ROposition	:	'center-right',
+				ROoffset 		: {top:0, left:10},
+				locale			:	['en','fr']
+			});
+			
+		});
+	
+	</script>
+	<link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+	<style>
+		label, input {display:block;}
+		.dateReadout.invalid {color:#ff0000;}
+		pre.prettyprint {padding:20px;}
+		form {margin:20px 0;padding:20px;background:#eeeeee;}
+	</style>
+	<title>InteliDate</title>
+</head>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+<body>
 
-    <title>InteliDate</title>
-  </head>
+	<!-- HEADER -->
+	<div id="header_wrap" class="outer">
+			<header class="inner">
+				<a id="forkme_banner" href="https://github.com/mbrzechwa/inteliDate">View on GitHub</a>
 
-  <body>
+				<h1 id="project_title">InteliDate</h1>
+				<h2 id="project_tagline">Inteligently interpret user date input in a single field</h2>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/mbrzechwa/inteliDate">View on GitHub</a>
+					<section id="downloads">
+						<a class="zip_download_link" href="https://github.com/mbrzechwa/inteliDate/zipball/master">Download this project as a .zip file</a>
+						<a class="tar_download_link" href="https://github.com/mbrzechwa/inteliDate/tarball/master">Download this project as a tar.gz file</a>
+					</section>
+			</header>
+	</div>
 
-          <h1 id="project_title">InteliDate</h1>
-          <h2 id="project_tagline">Inteligently interpret user date input in a single field</h2>
+	<!-- MAIN CONTENT -->
+	<div id="main_content_wrap" class="outer">
+		<section id="main_content" class="inner">
+			<h2><a id="what-is-intelidate" class="anchor" href="#what-is-intelidate" aria-hidden="true"><span class="octicon octicon-link"></span></a>What is InteliDate?</h2>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/mbrzechwa/inteliDate/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/mbrzechwa/inteliDate/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+			<p>InteliDate is a jQuery plugin for use with date inputs. InteliDate allow the user to enter a date in the format they are comfortable with and it will interpret it and read it back to them in long format as they type to confirm it understood them. Once the user has completed entering their date and exit the field InteliDate will automatically convert the user's input to the developer's defined format for submission.</p>
+			
+			<h2><a id="why-intelidate" class="anchor" href="#why-intelidate" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why InteliDate?</h2>
+			
+			<p>Date input and validation has many approaches and has gotten much easier with HTML5's date type and native controls. However, the native controls are all different and have their own quirks. The two primary controls being a calendar widget such as in Chrome, or a 3 wheeled spinner such as on a mobile device. Both of these techniques work great for near-time dates such as scheduling a reservation for the near future. But neither of them is great for far-time dates such as birthdays or anniversaries as the user ends up scrolling or clicking to go back at minimum 13 years but potentially over 90 years. For these types of dates many developers have opted to either force a format and hope the user's follow directions, or split the field into 3 to define month day and year separately. Forcing a format can lead to user confusion and frustration (mostly because they just don't read the directions), while splitting the input leads to yet more validation issues as well as now having 3 fields to post and store instead of 1.</p>
+			<p>With InteliDate you get the best of both worlds. The user is unrestricted on format with immediate feedback as to if their date was correctly understood and you can validate and store 1 field in the format you require.</p>
+			
+			<h2><a id="demo" class="anchor" href="#demo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Demo</h2>
+			<p>Try some formats you can think of: US Civilian vernacular (MM/dd/yy or MM/dd/yyyy; try it with different delimiters too!), Long form (Saturday, January 1st 2015; try it in French (janvier 1 2015) or any language your have defined in your browser settings), ISO (yyyy-MM-dd)</p>
+			<form action="#" method="get">
+				<label for="dateDemo1">Enter a date</label>
+				<input id="dateDemo1" type="date"/>
+			</form>			
+			<p>does not currently understand European standard (dd/MM/yy or dd/MM/yyyy) as it is difficult to distinguish dates of the 12th or below.</p>
+			
+			<h2><a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h2>
+			
+			<p>coming soon</p>
+		</section>
+	</div>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h2>
-<a id="what-is-intelidate" class="anchor" href="#what-is-intelidate" aria-hidden="true"><span class="octicon octicon-link"></span></a>What is InteliDate?</h2>
+	<!-- FOOTER  -->
+	<div id="footer_wrap" class="outer">
+		<footer class="inner">
+			<p class="copyright">InteliDate maintained by <a href="https://github.com/mbrzechwa">mbrzechwa</a></p>
+		</footer>
+	</div>
 
-<p>InteliDate is a jQuery plugin for use with date inputs. InteliDate allow the user to enter a date in the format they are comfortable with and it will interpret it and read it back to them in long format as they type to confirm it understood them. Once the user has completed entering their date and exit the field InteliDate will automatically convert the user's input to the developer's defined format for submission.</p>
+	
 
-<h2>
-<a id="why-intelidate" class="anchor" href="#why-intelidate" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why InteliDate?</h2>
-
-<p>Date input and validation has many approaches and has gotten much easier with HTML5's date type and native controls. However, the native controls are all different and have their own quirks. The two primary controls being a calendar widget such as in Chrome, or a 3 wheeled spinner such as on a mobile device. Both of these techniques work great for near-time dates such as scheduling a reservation for the near future. But neither of them is great for far-time dates such as birthdays or anniversaries as the user ends up scrolling or clicking to go back at minimum 13 years but potentially over 90 years. For these types of dates many developers have opted to either force a format and hope the user's follow directions, or split the field into 3 to define month day and year separately. Forcing a format can lead to user confusion and frustration (mostly because they just don't read the directions), while splitting the input leads to yet more validation issues as well as now having 3 fields to post and store instead of 1.
-With InteliDate you get the best of both worlds. The user is unrestricted on format with immediate feedback as to if their date was correctly understood and you can validate and store 1 field in the format you require.</p>
-
-<h2>
-<a id="demo" class="anchor" href="#demo" aria-hidden="true"><span class="octicon octicon-link"></span></a>Demo</h2>
-
-<p>coming soon</p>
-
-<h2>
-<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h2>
-
-<p>coming soon</p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">InteliDate maintained by <a href="https://github.com/mbrzechwa">mbrzechwa</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
-
-  </body>
+</body>
 </html>
