@@ -23,134 +23,107 @@
 */
 
 	$.fn.intelidate = function(options) {
-		
+		var input = this;
 		var time,
-				stored = this.data('intelidate') || '';
+				stored = input.data('intelidate') || '';
 		
-		$.extend($.fn.intelidate.settings, options, stored);
+		var config = $.extend(true,{},$.fn.intelidate.settings, options, stored);
 		
 		if(typeof navigator.languages !== 'undefined' && typeof navigator.languages === 'object') {
-			$.merge($.fn.intelidate.settings.locale, navigator.languages);
+			$.merge(config.locale, navigator.languages);
 		} else if(typeof navigator.languages !== 'undefined' && typeof navigator.languages === 'string') {
-			$.fn.intelidate.settings.locale.push(navigator.languages);
+			config.locale.push(navigator.languages);
 		};
 		
-		$.fn.intelidate.settings.localized = {};
+		config.localized = {};
 		
-		$.each($.fn.intelidate.settings.locale, function(i,v){
-			$.fn.intelidate.settings.localized[v] = {months:[], days:[], monthRegex:null}
-			
-			for(i=0; i <=11; i++) {
-				var d = new Date();
-				d.setMonth(i);
-				$.fn.intelidate.settings.localized[v].months.push({
-					short:d.toLocaleString(v, {month: "short"}),
-					long:d.toLocaleString(v, {month: "long"})
-				});
-			}
-			for(i=0; i <=6; i++) {
-				var d = new Date('8/9/2015');
-				d.setDate(d.getDate()+i);
-				$.fn.intelidate.settings.localized[v].days.push({
-					short:d.toLocaleString(v, {weekday: "short"}),
-					long:d.toLocaleString(v, {weekday: "long"})
-				});
-			}
-			$.fn.intelidate.settings.localized[v].monthRegex = buildMonthRegex(v);
-		});
+		if(toLocaleStringSupportsOptions()) {
+			$.each(config.locale, function(i,v){
+				config.localized[v] = {months:[], days:[], monthRegex:null}
+				
+				for(i=0; i <=11; i++) {
+					var d = new Date();
+					d.setMonth(i);
+					config.localized[v].months.push({
+						short:d.toLocaleString(v, {month: "short"}),
+						long:d.toLocaleString(v, {month: "long"})
+					});
+				}
+				for(i=0; i <=6; i++) {
+					var d = new Date('8/9/2015');
+					d.setDate(d.getDate()+i);
+					config.localized[v].days.push({
+						short:d.toLocaleString(v, {weekday: "short"}),
+						long:d.toLocaleString(v, {weekday: "long"})
+					});
+				}
+				config.localized[v].monthRegex = buildMonthRegex(config,v);
+			});
+		} else {
+			config.locale = [config.locale[0]];
+			config.localized[config.locale[0]] = $.fn.intelidate.defaultLocale;
+			config.localized[config.locale[0]].monthRegex = buildMonthRegex(config,config.locale[0]);
+		}
 		
 		// Test if the Firefox Legend positioning bug is an issue
 		var testForm = $('<form><fieldset><legend>testing</legend><input type="text"/></fieldset></form>');
 		$('body').append(testForm);
 		testForm.css({'position':'absolute','left':'-10000em','top':'0'});
 		testForm.find('input').css({'top':0,'position':'absolute'});
-		var legendAdjust = testForm.find('input').position().top > 0;
+		config.legendAdjust = testForm.find('input').position().top > 0;
 		testForm.remove();
 		
-		function positionReadout(input, readout) {
-			var iheight	= parseInt(input.height(),10),
-					iwidth 			= parseInt(input.width(),10),
-					osize 			= parseInt(input.css('font-size'),10),
-					nsize				= osize * $.fn.intelidate.settings.ROscale,
-					offset			= input.position();
-				
-			readout.css({
-				'text-align'	: $.fn.intelidate.settings.ROalign,
-				'position'		: 'absolute',
-				'display'			: 'block',
-				'font-size'		: nsize,
-				'line-height'	: input.css('line-height'),
-				'white-space' : 'nowrap'
-			});	//set new font size before getting height and width
-				
-			var lheight 		= parseInt(readout.height(),10),
-					lwidth 			= parseInt(readout.width(),10),
-					margin			= {top: parseInt(input.css('marginTop'),10)||0, bottom: parseInt(input.css('marginBottom'),10)||0,left: parseInt(input.css('marginLeft'),10)||0,right: parseInt(input.css('marginRight'),10)||0},
-					padding			= {top: parseInt(input.css('padding-top'),10)||0, bottom: parseInt(input.css('padding-bottom'),10)||0,left: parseInt(input.css('padding-left'),10)||0,right: parseInt(input.css('padding-right'),10)||0},
-					border 			= {top: parseInt(input.css('border-top-width'),10)||0, bottom: parseInt(input.css('border-bottom-width'),10)||0, left: parseInt(input.css('border-left-width'),10)||0,right: parseInt(input.css('border-right-width'),10)||0},
-					adjust			= legendAdjust && input.offsetParent().is('fieldset') && input.offsetParent().find('legend').length > 0 ? input.offsetParent().find('legend').outerHeight() : 0,
-					start 			= {top: offset.top + padding.top + margin.top - adjust, left: offset.left + padding.left + margin.left},
-					top 				= $.fn.intelidate.settings.ROposition.indexOf('top') != -1 ? offset.top - lheight - $.fn.intelidate.settings.ROoffset.top - adjust : $.fn.intelidate.settings.ROposition.indexOf('bottom') != -1 ? start.top + padding.bottom + border.bottom + border.top + iheight + $.fn.intelidate.settings.ROoffset.top : start.top + $.fn.intelidate.settings.ROoffset.top,
-					left 				= $.fn.intelidate.settings.ROposition.indexOf('left') != -1 ? start.left - lwidth - $.fn.intelidate.settings.ROoffset.left : $.fn.intelidate.settings.ROposition.indexOf('right') != -1 ? start.left + border.right + border.left + padding.right + iwidth + $.fn.intelidate.settings.ROoffset.left : $.fn.intelidate.settings.ROalign == 'right' ? start.left + $.fn.intelidate.settings.ROoffset.left + iwidth - lwidth : start.left + $.fn.intelidate.settings.ROoffset.left;
-				
-			readout.css({
-				'top'		: top,
-				'left'	: left
-			});
-		}
 		
 		return this.each(function() {
-			var elem = $(this);
-			if(elem.is('[type=date]')) {
-				elem = changeType(elem, 'text');
+			var input = $(this);
+			input.data('intelidate', config);
+			if(input.is('[type=date]')) {
+				input = changeType(input, 'text');
 			}
-			elem
-			.on($.fn.intelidate.settings.evtSet, function(){
+			input
+			.on(config.evtSet, function(){
 				clearTimeout(time);
-				var input	= $(this),
 				v					= input.val(),
-				date				= toDate(v),
-				readout		= input.next('.'+$.fn.intelidate.settings.ROclass).length > 0 ? input.next('.'+$.fn.intelidate.settings.ROclass) : $('<span class="'+$.fn.intelidate.settings.ROclass+'"/>');
+				date			= toDate(config,v),
+				readout		= input.next('.'+config.ROclass).length > 0 ? input.next('.'+config.ROclass) : $('<span class="'+config.ROclass+'"/>');
 				
 				if (v == '') {
-					input.removeClass($.fn.intelidate.settings.invalidClass);
-					readout.fadeOut($.fn.intelidate.settings.ROanimate).remove();
+					input.removeClass(config.invalidClass);
+					readout.fadeOut(config.ROanimate).remove();
 					return false
 				}
-				readout.text(formatDate(date, $.fn.intelidate.settings.ROformat, $.fn.intelidate.settings.locale));
+				readout.text(formatDate(config, date, config.ROformat));
 				
 				if(isDate(date)) {
-					input.removeClass($.fn.intelidate.settings.invalidClass);
-					readout.removeClass($.fn.intelidate.settings.invalidClass);
+					input.removeClass(config.invalidClass);
+					readout.removeClass(config.invalidClass);
 				}
 				else {
-					input.addClass($.fn.intelidate.settings.invalidClass);
-					readout.addClass($.fn.intelidate.settings.invalidClass);
+					input.addClass(config.invalidClass);
+					readout.addClass(config.invalidClass);
 				}
 				readout.insertAfter(input).show();
-				positionReadout(input, readout);
+				positionReadout(config,input,readout);
 			})
 			.on('focus', function(){
-				if($.fn.intelidate.settings.showRO) {
-					var input	= $(this),
-					readout		= input.next('.'+$.fn.intelidate.settings.ROclass);
+				if(config.showRO) {
+					readout = input.next('.'+config.ROclass);
 					clearTimeout(time);
-					readout.fadeIn($.fn.intelidate.settings.ROanimate);
+					readout.fadeIn(config.ROanimate);
 				}
 			})
 			.on('blur', function(){
-				var input	= $(this),
-				v					= input.val(),
-				date			= toDate(v);
+				v			= input.val(),
+				date	= toDate(config,v);
 				if(isDate(date)) {
-					input.val(formatDate(date, $.fn.intelidate.settings.formatOutput, $.fn.intelidate.settings.locale));
+					input.val(formatDate(config, date, config.formatOutput));
 				}
-				if(!input.hasClass($.fn.intelidate.settings.invalidClass) && $.fn.intelidate.settings.hideRO) {
-					var readout = input.next('.'+$.fn.intelidate.settings.ROclass);
+				if(!input.hasClass(config.invalidClass) && config.hideRO) {
+					var readout = input.next('.'+config.ROclass);
 					
 					time = setTimeout(function(){
-						readout.fadeOut($.fn.intelidate.settings.ROanimate);
-					}, $.fn.intelidate.settings.ROtimeout);
+						readout.fadeOut(config.ROanimate);
+					}, config.ROtimeout);
 				}
 			})
 			
@@ -163,11 +136,11 @@
 				
 				// did the window really just resize? (I'm looking at you IE 8-)
 				if (currentHeight == undefined || currentHeight != windowHeight || currentWidth == undefined || currentWidth != windowWidth) {
-					$('.'+$.fn.intelidate.settings.ROclass)
+					$('.'+config.ROclass)
 					.each(function(){
 						readout = $(this);
 						input = readout.prev('input');
-						positionReadout(input, readout);
+						positionReadout(config,input, readout);
 					})
 				}
 				
@@ -196,7 +169,69 @@
 		ROlocale			:	'en',									// Readout localization. Accepts locale string or "user" to default to user's browser settings
 	}
 	
-	function toDate(str) {
+	$.fn.intelidate.defaultLocale = {
+		days 		:	[
+			{short: 'Sun', long: 'Sunday'},
+			{short: 'Mon', long: 'Monday'},
+			{short: 'Tue', long: 'Tuesday'},
+			{short: 'Wed', long: 'Wednesday'},
+			{short: 'Thu', long: 'Thursday'},
+			{short: 'Fri', long: 'Friday'},
+			{short: 'Sat', long: 'Saturday'},
+		],
+		months	:	[
+			{short: 'Jan', long: 'January'},
+			{short: 'Feb', long: 'Febuary'},
+			{short: 'Mar', long: 'March'},
+			{short: 'Apr', long: 'April'},
+			{short: 'May', long: 'May'},
+			{short: 'Jun', long: 'June'},
+			{short: 'Jul', long: 'July'},
+			{short: 'Aug', long: 'August'},
+			{short: 'Sep', long: 'September'},
+			{short: 'Oct', long: 'October'},
+			{short: 'Nov', long: 'November'},
+			{short: 'Dec', long: 'December'},
+		]
+	}
+	
+	function positionReadout(config, input, readout) {
+		var iheight	= parseInt(input.height(),10),
+				iwidth 			= parseInt(input.width(),10),
+				osize 			= parseInt(input.css('font-size'),10),
+				nsize				= osize * config.ROscale,
+				offset			= input.position();
+			
+		readout.css({
+			'text-align'	: config.ROalign,
+			'position'		: 'absolute',
+			'display'			: 'block',
+			'font-size'		: nsize,
+			'line-height'	: input.css('line-height'),
+			'white-space' : 'nowrap'
+		});	//set new font size before getting height and width
+			
+		var lheight 		= parseInt(readout.height(),10),
+				lwidth 			= parseInt(readout.width(),10),
+				margin			= {top: parseInt(input.css('marginTop'),10)||0, bottom: parseInt(input.css('marginBottom'),10)||0,left: parseInt(input.css('marginLeft'),10)||0,right: parseInt(input.css('marginRight'),10)||0},
+				padding			= {top: parseInt(input.css('padding-top'),10)||0, bottom: parseInt(input.css('padding-bottom'),10)||0,left: parseInt(input.css('padding-left'),10)||0,right: parseInt(input.css('padding-right'),10)||0},
+				border 			= {top: parseInt(input.css('border-top-width'),10)||0, bottom: parseInt(input.css('border-bottom-width'),10)||0, left: parseInt(input.css('border-left-width'),10)||0,right: parseInt(input.css('border-right-width'),10)||0},
+				adjust			= config.legendAdjust && input.offsetParent().is('fieldset') && input.offsetParent().find('legend').length > 0 ? input.offsetParent().find('legend').outerHeight() : 0,
+				start 			= {top: offset.top + padding.top + margin.top - adjust, left: offset.left + padding.left + margin.left},
+				top 				= config.ROposition.indexOf('top') != -1 ? offset.top - lheight - config.ROoffset.top - adjust : config.ROposition.indexOf('bottom') != -1 ? start.top + padding.bottom + border.bottom + border.top + iheight + config.ROoffset.top : start.top + config.ROoffset.top,
+				left 				= config.ROposition.indexOf('left') != -1 ? start.left - lwidth - config.ROoffset.left : config.ROposition.indexOf('right') != -1 ? start.left + border.right + border.left + padding.right + iwidth + config.ROoffset.left : config.ROalign == 'right' ? start.left + config.ROoffset.left + iwidth - lwidth : start.left + config.ROoffset.left;
+			
+		readout.css({
+			'top'		: top,
+			'left'	: left
+		});
+	}
+	
+	function toLocaleStringSupportsOptions() {
+		return !!(typeof Intl != 'undefined' && Intl && typeof Intl.DateTimeFormat != 'undefined');
+	}
+	
+	function toDate(config,str) {
 		if($.type(str) == 'date') return str;
 		str = ''+removeDiacritics(str).toLowerCase();
 		str = str
@@ -204,10 +239,10 @@
 			.replace(/[^\w]/g, '/')
 			.replace(/\/+/g, '/')
 			.replace(/(\d)(?:th|st|nd|rd)\b/gi, "$1");
-		$.each($.fn.intelidate.settings.locale, function(i,v){
-			str = str.replace($.fn.intelidate.settings.localized[v].monthRegex, function(string){
+		$.each(config.locale, function(i,v){
+			str = str.replace(config.localized[v].monthRegex, function(string){
 				var index;
-				$.each($.fn.intelidate.settings.localized[v].months, function(i, val) {
+				$.each(config.localized[v].months, function(i, val) {
 					if(removeDiacritics(val.long).toLowerCase().indexOf(string) == 0) index = i+1;
 				});
 				return index;
@@ -216,12 +251,11 @@
 		return new Date(str);
 	}
 	
-	function buildMonthRegex(locale) {
+	function buildMonthRegex(config,locale) {
 		var regex,
 				whole = '',
 				bound = /\b/;
-				
-		$.each($.fn.intelidate.settings.localized[locale].months, function(i,v) {
+		$.each(config.localized[locale].months, function(i,v) {
 			var part = removeDiacritics(v.short).toLowerCase().replace(/\./g, '');
 			var remainder = removeDiacritics(v.long).toLowerCase().substr(part.length).split('');
 			 $.each(remainder, function(i,v){
@@ -229,7 +263,7 @@
 				 if(i > 0 && i < remainder.length -1) part = part.substr(0,part.indexOf(')?'))+'('+v+')?'+part.substr(part.indexOf(')?'));
 				 if(i != 0 && i == remainder.length -1) part = part.substr(0,part.indexOf(')?'))+v+'?'+part.substr(part.indexOf(')?'));
 			});
-			if(i == 0 || i == $.fn.intelidate.settings.localized[locale].months.length) {
+			if(i == 0 || i == config.localized[locale].months.length) {
 					 whole = whole+part   
 			} else {
 					 whole = whole+'|'+part   
@@ -240,18 +274,18 @@
     return regex;
 	}
 	
-	isDate = function(date) {
+	function isDate(date) {
 		return $.type(date) === 'date' ? date.toDateString() != 'Invalid Date' && date.toDateString() != 'NaN' : false;
 	}
 		
-	function formatDate(dateObj, format) {
+	function formatDate(config, dateObj, format) {
 		format = format || 'yyyy-MM-dd hh:mm:ss'; // default format
 		format = ''+format; // Force to string
-		suffix		= ['th','st','nd','rd'];
-		var userLocal	= typeof navigator.language !== 'undefined' && typeof navigator.language === 'string' ? navigator.language : $.fn.intelidate.settings.locale[0];
-		var locale = $.fn.intelidate.settings.ROlocale == 'user' ? userLocal : $.fn.intelidate.settings.ROlocale;
+		suffix = ['th','st','nd','rd'];
+		var userLocal	= typeof navigator.language !== 'undefined' && typeof navigator.language === 'string' ? navigator.language : config.locale[0];
+		var locale = config.ROlocale == 'user' ? userLocal : config.ROlocale;
 		
-		dateObj		= toDate(dateObj);
+		dateObj	= toDate(config, dateObj);
 		if(isDate(dateObj)) {
 			fmt				= {
 				i		: dateObj.getMilliseconds(),
@@ -266,12 +300,12 @@
 				HH	: dateObj.getHours() < 10 ? '0'+dateObj.getHours() : dateObj.getHours(),
 				d		: dateObj.getDate(),
 				dd	: dateObj.getDate() < 10 ? '0'+dateObj.getDate() : dateObj.getDate(),
-				ddd	: $.fn.intelidate.settings.localized[locale].days[dateObj.getDay()].short,
-				dddd: $.fn.intelidate.settings.localized[locale].days[dateObj.getDay()].long,
+				ddd	: config.localized[locale].days[dateObj.getDay()].short,
+				dddd: config.localized[locale].days[dateObj.getDay()].long,
 				M		: dateObj.getMonth()+1,
 				MM	: dateObj.getMonth()+1 < 10 ? '0'+(dateObj.getMonth()+1) : dateObj.getMonth()+1,
-				MMM	: $.fn.intelidate.settings.localized[locale].months[dateObj.getMonth()].short,
-				MMMM: $.fn.intelidate.settings.localized[locale].months[dateObj.getMonth()].long,
+				MMM	: config.localized[locale].months[dateObj.getMonth()].short,
+				MMMM: config.localized[locale].months[dateObj.getMonth()].long,
 				yyyy: Math.abs(dateObj.getFullYear()),
 				t		: dateObj.getHours() < 12 ? 'A' : 'P',
 				tt	: dateObj.getHours() < 12 ? 'AM' : 'PM',
